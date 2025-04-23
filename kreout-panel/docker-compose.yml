@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  kreout-api:
+    build: .
+    container_name: kreout-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app
+    environment:
+      - DATABASE_URL=sqlite:///./kreout.db
+    restart: unless-stopped
