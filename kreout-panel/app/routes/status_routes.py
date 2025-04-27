@@ -10,7 +10,7 @@ import psutil
 import os
 
 router = APIRouter()
-templates = Jinja2Templates(directory="/templates/")
+templates = Jinja2Templates(directory="app/templates")
 
 
 # Refactored status route to support multiple servers
