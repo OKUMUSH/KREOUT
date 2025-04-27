@@ -10,11 +10,11 @@ import psutil
 import os
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
+templates = Jinja2Templates(directory="templates")
 
 
 # Refactored status route to support multiple servers
-@router.get("/status/{server_name}", dependencies=[Depends(verify_token)])
+@router.get("/{server_name}", dependencies=[Depends(verify_token)])
 def get_status(server_name: str):
     result = subprocess.run(f"screen -ls | grep {server_name}", shell=True, capture_output=True, text=True)
     is_running = server_name in result.stdout
