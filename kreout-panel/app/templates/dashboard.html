@@ -1,13 +1,57 @@
-<!-- app/templates/dashboard.html -->
 <!DOCTYPE html>
 <html>
 
 <head>
-    <title>Kreout Dashboard</title>
+    <title>Kreout Server Dashboard</title>
 </head>
 
 <body>
-    <h1>Welcome to Kreout Server Control Panel 🚀</h1>
+    <h1>Kreout Server Dashboard</h1>
+
+    <button onclick="sendCommand('/control/start')">Start Server</button>
+    <button onclick="sendCommand('/control/stop')">Stop Server</button>
+    <button onclick="sendCommand('/control/restart')">Restart Server</button>
+
+    <form onsubmit="sendCustomCommand(event)">
+        <input type="text" id="cmd" placeholder="Type command..." />
+        <button type="submit">Send Command</button>
+    </form>
+
+    <pre id="response"></pre>
+
+    <hr />
+
+    <h2>🧙 NPC Dashboard</h2>
+    <p>This is your NPC management interface.</p>
+
+    <ul>
+        {% for npc in npcs %}
+        <li>
+            <strong>{{ npc.name }}</strong><br />
+            <em>{{ npc.description }}</em>
+        </li>
+        {% else %}
+        <li>No NPCs found.</li>
+        {% endfor %}
+    </ul>
+
+    <script>
+        async function sendCommand(endpoint) {
+            const res = await fetch(endpoint, { method: 'POST' });
+            const data = await res.json();
+            document.getElementById('response').textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function sendCustomCommand(event) {
+            event.preventDefault();
+            const cmd = document.getElementById('cmd').value;
+            const res = await fetch(`/control/command?cmd=${encodeURIComponent(cmd)}`, {
+                method: 'POST'
+            });
+            const data = await res.json();
+            document.getElementById('response').textContent = JSON.stringify(data, null, 2);
+        }
+    </script>
 </body>
 
 </html>

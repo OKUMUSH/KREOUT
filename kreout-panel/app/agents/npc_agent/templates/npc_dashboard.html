@@ -1,0 +1,307 @@
+<body>
+    <h1>🧙 NPC Dashboard</h1>
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+        <div>
+            <input type="text" id="npc-search" placeholder="🔍 Search NPC..."
+                style="padding: 10px; width: 250px; border-radius: 8px; border: 1px solid #ccc;">
+        </div>
+        <button onclick="toggleCreateNPC()"
+            style="padding: 10px 20px; background: linear-gradient(90deg, #4facfe, #00f2fe); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+            ➕ Create New NPC
+        </button>
+    </div>
+
+    <div id="create-npc-container" style="display: none;">
+        <!-- Keep your create NPC form here, unchanged for now -->
+        <div style="margin: 40px 0; text-align: center;">
+            <h2 style="font-size: 28px; color: #333;">Create a New Legendary NPC</h2>
+            <p style="margin-bottom: 20px; color: #666;">Bring a new character to life with unique quests, interests,
+                and
+                stories.</p>
+            <form id="create-npc-form" action="/npcs/admin/create" method="post" onsubmit="validateAndSubmitNPC(event)"
+                style="display: inline-block; text-align: left; max-width: 600px; margin-top: 20px;">
+                <label>Name:</label><br>
+                <input type="text" name="name" required style="width: 100%; padding: 10px; margin-bottom: 10px;"><br>
+
+                <label>Personality:</label><br>
+                <div id="personality-list" style="margin-bottom: 10px;"></div>
+                <input type="text" id="personality-input" style="width: 80%; padding: 10px;">
+                <button type="button" onclick="addPersonality()"
+                    style="padding: 10px; margin-left: 5px; background: linear-gradient(90deg, #ff7e5f, #feb47b); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">+</button><br>
+
+                <label>Interests:</label><br>
+                <div id="interests-list" style="margin-bottom: 10px;"></div>
+                <input type="text" id="interest-input" style="width: 80%; padding: 10px;">
+                <button type="button" onclick="addInterest()"
+                    style="padding: 10px; margin-left: 5px; background: linear-gradient(90deg, #ff7e5f, #feb47b); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">+</button><br>
+
+                <input type="hidden" name="personality" id="personality-hidden">
+                <input type="hidden" name="interests" id="interests-hidden">
+
+                <button type="submit"
+                    style="width: 100%; padding: 15px; background: linear-gradient(90deg, #ff7e5f, #feb47b); color: white; font-size: 18px; font-weight: bold; border: none; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; margin-top: 20px;">
+                    ✨ Create NPC
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="npc-table-container">
+        <table border="1" cellpadding="8" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Personality</th>
+                    <th>Interests</th>
+                    <th>Main Quests</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="npc-list-body">
+                {% for npc in npcs %}
+                <tr>
+                    <td><strong>{{ npc.name }}</strong></td>
+                    <td>
+                        {% if npc.personality %}
+                        {% if npc.personality is string %}
+                        <span class="badge">{{ npc.personality }}</span>
+                        {% else %}
+                        {% for trait in npc.personality %}
+                        <span class="badge">{{ trait }}</span>
+                        {% endfor %}
+                        {% endif %}
+                        {% else %}
+                        <span class="badge">No Personality</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if npc.interests %}
+                        {% for interest in npc.interests %}
+                        <span class="badge">{{ interest }}</span>
+                        {% endfor %}
+                        {% else %}
+                        <span class="badge">No Interests</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if npc.quests_linked is defined %}
+                        📦 Linked
+                        {% elif npc.quests is defined and npc.quests.main is defined %}
+                        {{ npc.quests.main | length }}
+                        {% else %}
+                        🚫 No Quests Assigned
+                        <a href="/npcs/{{ npc.id }}/edit" style="font-size: 12px;">➕ Add</a>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button onclick="viewNPC('{{ npc.id }}')" class="action-btn">🔍 View</button>
+                        <a href="/npcs/quests/{{ npc.id }}" class="action-btn">🌳 Quests</a>
+                        <a href="/npcs/{{ npc.id }}/edit" class="action-btn">⚙️ Manage</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div id="npc-detail-panel"
+        style="display: none; margin-top: 20px; padding: 20px; border: 2px solid #ccc; border-radius: 10px; background-color: #f9f9f9;">
+        <h2 id="npc-detail-name" style="margin-bottom: 10px;"></h2>
+        <div id="npc-tabs" style="margin-top: 20px;">
+            <button class="tab-btn" onclick="showTab('overview')">📋 Overview</button>
+            <button class="tab-btn" onclick="showTab('quests')">🌳 Quests</button>
+            <button class="tab-btn" onclick="showTab('shop')">🛒 Shop</button>
+            <button class="tab-btn" onclick="showTab('trust')">❤️ Trust</button>
+        </div>
+        <div id="npc-tab-content">
+            <div id="tab-overview" class="tab-content"></div>
+            <div id="tab-quests" class="tab-content" style="display:none;">
+                <button onclick="openCreateQuestForm()"
+                    style="margin-bottom: 20px; padding: 10px 20px; background: linear-gradient(90deg, #00c6ff, #0072ff); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                    ➕ Add New Quest
+                </button>
+            </div>
+            <!-- Create New Quest Form -->
+            <div id="create-quest-form"
+                style="display: none; margin-top: 20px; padding: 20px; background: #f1f1f1; border-radius: 12px;">
+                <h3>Create New Main Quest</h3>
+                <input type="text" id="quest-id" placeholder="Quest ID"
+                    style="margin-bottom: 10px; width: 100%; padding: 8px;">
+                <input type="text" id="quest-title" placeholder="Quest Title"
+                    style="margin-bottom: 10px; width: 100%; padding: 8px;">
+                <textarea id="quest-description" placeholder="Quest Description"
+                    style="margin-bottom: 10px; width: 100%; padding: 8px;"></textarea>
+                <select id="quest-type" style="margin-bottom: 10px; width: 100%; padding: 8px;">
+                    <option value="">Select Quest Type</option>
+                    <option value="talk">Talk</option>
+                    <option value="collect">Collect</option>
+                    <option value="delivery">Delivery</option>
+                    <option value="bring">Bring</option>
+                    <option value="kill">Kill</option>
+                    <option value="explore">Explore</option>
+                </select>
+                <input type="text" id="quest-reward-xp" placeholder="XP Reward"
+                    style="margin-bottom: 10px; width: 100%; padding: 8px;">
+                <input type="text" id="quest-reward-trust" placeholder="Trust Reward"
+                    style="margin-bottom: 10px; width: 100%; padding: 8px;">
+                <button onclick="saveNewQuest()" class="save-quest-btn"
+                    style="padding: 10px; background: linear-gradient(90deg, #4facfe, #00f2fe); color: white; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">
+                    ✅ Save Quest
+                </button>
+            </div>
+            <div id="tab-shop" class="tab-content" style="display:none;"></div>
+            <div id="tab-trust" class="tab-content" style="display:none;"></div>
+        </div>
+    </div>
+
+    <style>
+        .action-btn {
+            background: #6c5ce7;
+            color: white;
+            padding: 6px 10px;
+            margin: 2px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 13px;
+            transition: background 0.3s;
+        }
+
+        .action-btn:hover {
+            background: #4b4bf9;
+        }
+
+        .tab-btn {
+            background: #dfe6e9;
+            border: none;
+            padding: 10px 20px;
+            margin-right: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tab-btn:hover {
+            background: #b2bec3;
+        }
+    </style>
+
+    <script>
+        function toggleCreateNPC() {
+            const container = document.getElementById('create-npc-container');
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        document.getElementById('npc-search').addEventListener('input', function () {
+            const searchTerm = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#npc-list-body tr');
+
+            rows.forEach(row => {
+                const name = row.querySelector('td:first-child').innerText.toLowerCase();
+                if (name.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+        // Dynamic NPC detail panel loader
+        async function viewNPC(npcId) {
+            const response = await fetch(`/npcs/${npcId}`);
+            if (response.ok) {
+                const data = await response.json();
+                const npc = data.npc || data;
+
+                document.getElementById('npc-detail-panel').style.display = 'block';
+                document.getElementById('npc-detail-name').innerText = npc.name;
+
+                // Fill Overview tab
+                document.getElementById('tab-overview').innerHTML = `
+                    <p><strong>Personality:</strong> ${Array.isArray(npc.personality) ? npc.personality.join(', ') : npc.personality}</p>
+                    <p><strong>Interests:</strong> ${Array.isArray(npc.interests) ? npc.interests.join(', ') : npc.interests}</p>
+                    <p><strong>Default Dialog:</strong> ${npc.dialog?.default || 'None'}</p>
+                    <p><strong>Low Trust Dialog:</strong> ${npc.dialog?.low_trust || 'None'}</p>
+                    <p><strong>Medium Trust Dialog:</strong> ${npc.dialog?.medium_trust || 'None'}</p>
+                    <p><strong>High Trust Dialog:</strong> ${npc.dialog?.high_trust || 'None'}</p>
+                `;
+
+                // Fill Quests tab
+                let questsHTML = '';
+                if (npc.quests_linked) {
+                    try {
+                        const questResponse = await fetch(`/npcs/quests/${npcId}`);
+                        if (questResponse.ok) {
+                            const questData = await questResponse.json();
+                            if (questData.quests && Array.isArray(questData.quests)) {
+                                questsHTML += `<h3>${questData.title}</h3><p>${questData.description}</p><ul>`;
+                                questData.quests.forEach(q => {
+                                    questsHTML += `
+                                        <li style="margin-bottom: 10px;">
+                                            <strong>🏷️ ${q.title}</strong> [${q.type}]<br>
+                                            📜 <em>${q.description}</em><br>
+                                            🎁 Rewards: XP ${q.reward?.experience || 0}, Trust ${q.reward?.trust || 0}
+                                        </li>`;
+                                });
+                                questsHTML += `</ul>`;
+                            } else {
+                                console.error("Expected questData.quests to be an array:", questData);
+                                questsHTML = `<p>⚠️ No quests found or invalid format!</p>`;
+                            }
+                        } else {
+                            questsHTML = `<p>Failed to load quests for NPC: ${npcId}</p>`;
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        questsHTML = `<p>Error loading quests data.</p>`;
+                    }
+                } else {
+                    questsHTML = `<p>No quests assigned yet.</p>`;
+                }
+
+                document.getElementById('tab-quests').innerHTML += questsHTML;
+            } else {
+                alert('Failed to load NPC details.');
+            }
+        }
+
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.style.display = 'none');
+            document.getElementById(`tab-${tabName}`).style.display = 'block';
+        }
+
+        function openCreateQuestForm() {
+            document.getElementById('create-quest-form').style.display = 'block';
+        }
+
+        function saveNewQuest() {
+            const newQuest = {
+                id: document.getElementById('quest-id').value,
+                title: document.getElementById('quest-title').value,
+                description: document.getElementById('quest-description').value,
+                type: document.getElementById('quest-type').value,
+                reward: {
+                    experience: parseInt(document.getElementById('quest-reward-xp').value) || 0,
+                    trust: parseInt(document.getElementById('quest-reward-trust').value) || 0
+                },
+                dialogues: [],
+                expires_in_days: null,
+                repeatable: false
+            };
+
+            console.log("Saving New Quest:", newQuest);
+
+            if (currentNPC.quests.main) {
+                currentNPC.quests.main.push(newQuest);
+            } else {
+                currentNPC.quests.main = [newQuest];
+            }
+
+            alert('✅ New Quest Added! Don\'t forget to Save NPC after!');
+            document.getElementById('create-quest-form').style.display = 'none';
+        }
+    </script>
+</body>

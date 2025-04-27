@@ -1,0 +1,10 @@
+{
+    "trust_rewards": {
+        "25": {
+            "message": "You're starting to earn Carl's trust!"
+        },
+        "50": {
+            "message": "Carl treats you like family now!"
+        }
+    }
+}

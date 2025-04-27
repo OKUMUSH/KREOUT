@@ -1,0 +1,13 @@
+{
+  "id": "carl_farmer",
+  "name": "Carl the Farmer",
+  "personality": [
+    "grumpy",
+    "kind-hearted"
+  ],
+  "interests": [
+    "farming",
+    "fishing"
+  ],
+  "default_interaction": "dialog"
+}

@@ -1,0 +1,13 @@
+{
+    "shop_enabled": true,
+    "shop_items": [
+        {
+            "item": "minecraft:wheat_seeds",
+            "price": 5
+        },
+        {
+            "item": "minecraft:bread",
+            "price": 10
+        }
+    ]
+}

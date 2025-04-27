@@ -1,0 +1,15 @@
+{
+    "quests": [
+        {
+            "id": "main_quest_carl_001",
+            "title": "Greetings from Carl",
+            "description": "Talk to Carl the Farmer to begin your journey.",
+            "type": "talk",
+            "rewards": {
+                "experience": 10,
+                "trust": 5
+            },
+            "next_quest": "main_quest_carl_002"
+        }
+    ]
+}
